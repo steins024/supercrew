@@ -70,17 +70,18 @@ for feature_dir in "$features_dir"/*/; do
     meta_file="$feature_dir/meta.yaml"
 
     if [ -f "$meta_file" ]; then
-        # Parse meta.yaml with simple grep/sed (no yq dependency)
-        title=$(grep '^title:' "$meta_file" | sed 's/^title: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
-        status=$(grep '^status:' "$meta_file" | sed 's/^status: *//' | head -1)
-        priority=$(grep '^priority:' "$meta_file" | sed 's/^priority: *//' | head -1)
-        owner=$(grep '^owner:' "$meta_file" | sed 's/^owner: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
+        # Try remote branch origin/feature/<fid> for latest, fall back to local
+        meta_content=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || cat "$meta_file")
+        title=$(echo "$meta_content" | grep '^title:' | sed 's/^title: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
+        status=$(echo "$meta_content" | grep '^status:' | sed 's/^status: *//' | head -1)
+        priority=$(echo "$meta_content" | grep '^priority:' | sed 's/^priority: *//' | head -1)
+        owner=$(echo "$meta_content" | grep '^owner:' | sed 's/^owner: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
 
-        # Get progress from plan.md
-        plan_file="$feature_dir/plan.md"
+        # Get progress from plan.md (try remote branch first, fall back to local)
         progress="N/A"
-        if [ -f "$plan_file" ]; then
-            prog_val=$(grep '^progress:' "$plan_file" | sed 's/^progress: *//' | head -1)
+        plan_content=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/plan.md" 2>/dev/null || cat "$feature_dir/plan.md" 2>/dev/null || echo "")
+        if [ -n "$plan_content" ]; then
+            prog_val=$(echo "$plan_content" | grep '^progress:' | sed 's/^progress: *//' | head -1)
             if [ -n "$prog_val" ]; then
                 progress="${prog_val}%"
             fi

@@ -58,13 +58,10 @@ for feature_dir in "$FEATURES_DIR"/*/; do
     # Read local meta.yaml
     meta_content=$(cat "$meta_file")
 
-    # If feature has a branch field, try git show for latest version
-    branch=$(yaml_val "$meta_content" "branch")
-    if [ -n "$branch" ]; then
-        remote_meta=$(git show "${branch}:${FEATURES_DIR}/${fid}/meta.yaml" 2>/dev/null || echo "")
-        if [ -n "$remote_meta" ]; then
-            meta_content="$remote_meta"
-        fi
+    # Try remote branch origin/feature/<fid> for latest version
+    remote_meta=$(git show "origin/feature/${fid}:${FEATURES_DIR}/${fid}/meta.yaml" 2>/dev/null || echo "")
+    if [ -n "$remote_meta" ]; then
+        meta_content="$remote_meta"
     fi
 
     title=$(yaml_val "$meta_content" "title")
@@ -73,12 +70,10 @@ for feature_dir in "$FEATURES_DIR"/*/; do
     owner=$(yaml_val "$meta_content" "owner")
     blocked_by=$(yaml_list "$meta_content" "blocked_by")
 
-    # Get progress from plan.md (try branch version first)
+    # Get progress from plan.md (try remote branch first, then local)
     progress=""
     plan_content=""
-    if [ -n "$branch" ]; then
-        plan_content=$(git show "${branch}:${FEATURES_DIR}/${fid}/plan.md" 2>/dev/null || echo "")
-    fi
+    plan_content=$(git show "origin/feature/${fid}:${FEATURES_DIR}/${fid}/plan.md" 2>/dev/null || echo "")
     if [ -z "$plan_content" ] && [ -f "$feature_dir/plan.md" ]; then
         plan_content=$(cat "$feature_dir/plan.md")
     fi
