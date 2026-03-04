@@ -1,6 +1,6 @@
 id: schema-validation
 title: "Pre-commit Schema Validation"
-status: designing
+status: planning
 owner: "Dazhen Pan"
 priority: P1
 teams: []
