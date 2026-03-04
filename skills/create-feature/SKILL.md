@@ -46,7 +46,8 @@ Now that all input is gathered, execute the appropriate workflow:
 #### If NOT creating a backlog PR:
 
 1. Create the feature directory and files on the current branch (see file specs below)
-2. Remind the user that the feature won't be visible to the rest of the team until it's merged into remote main via a PR
+2. Commit the feature files and push to `origin/feature/<feature-id>` so the kanban (SessionStart hook) can see them
+3. Remind the user that the feature is visible on its feature branch but won't be on main until merged via a PR
 
 ### Feature Directory and Files
 

@@ -51,6 +51,13 @@ Add a new entry at the **end** of the file (entries are chronological):
 
 - Update `meta.yaml` `updated` date to today
 
+### Step 4: Commit and Push to Remote
+
+1. Commit the updated `log.md` and `meta.yaml` to the feature branch (`feature/<id>`)
+2. Push to `origin/feature/<id>` so the kanban (SessionStart hook) reflects the change
+
+If already on the feature branch, commit and push directly. If on another branch, checkout the feature branch, commit, push, then return to the original branch.
+
 ## Rules
 
 - **Never overwrite** existing log entries — always **append**

@@ -62,6 +62,15 @@ progress: 0
    - `progress`: `Math.round(completed_tasks / total_tasks * 100)`
 3. Update `meta.yaml` `updated` date
 
+## Commit and Push to Remote
+
+After either mode completes:
+
+1. Commit the updated files (`plan.md`, `meta.yaml`, and `log.md` if changed) to the feature branch (`feature/<id>`)
+2. Push to `origin/feature/<id>` so the kanban (SessionStart hook) reflects the change
+
+If already on the feature branch, commit and push directly. If on another branch, checkout the feature branch, commit, push, then return to the original branch.
+
 ## Validation
 
 - `total_tasks` must equal the actual count of task checkbox items
