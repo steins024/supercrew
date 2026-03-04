@@ -1,2 +1,11 @@
 # Project
 .ref
+
+# OS
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
