@@ -106,10 +106,31 @@ After creating all files, present a summary:
 📁 Location: .supercrew/features/<feature-id>/
 📄 Files: meta.yaml, design.md, plan.md, log.md
 🏷️ Status: planning | Priority: <priority> | Owner: <owner>
+```
 
+### Step 4: Offer to Create a PR for Backlog Visibility
+
+Ask the user if they want to create a PR to add this feature to the backlog. If yes:
+
+1. Fetch latest and create a new branch named `backlog/<feature-id>` from `origin/main`
+2. Stage the new `.supercrew/features/<feature-id>/` directory
+3. Commit with message: `feat: add feature <feature-id> to backlog`
+4. Push the branch and create a PR with:
+   - **Title:** `feat: add <feature-id> to backlog`
+   - **Body:** The feature title, description, priority, and owner
+5. Report the PR URL to the user
+
+If the user declines, remind them that the feature won't be visible to the rest of the team until it's merged into remote main via a PR.
+
+### Step 5: Next Steps
+
+Present next steps:
+
+```
 Next steps:
 - Use brainstorming to refine the design in design.md
 - Once design is approved, use sync-plan to generate the implementation plan
+- Use /supercrew:work-on <feature-id> to start working on this feature (creates a feature branch)
 ```
 
 ## Validation Rules
