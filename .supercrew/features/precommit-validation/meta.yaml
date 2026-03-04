@@ -1,0 +1,9 @@
+id: precommit-validation
+title: "Pre-commit Schema Validation"
+status: designing
+owner: "Dazhen Pan"
+priority: P0
+teams: []
+tags: [validation, hooks, schema]
+created: "2026-03-05"
+updated: "2026-03-05"
