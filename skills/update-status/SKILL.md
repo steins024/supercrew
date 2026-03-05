@@ -13,7 +13,7 @@ Update the `status` field in a feature's `meta.yaml`. Status changes must follow
 ## Valid Status Transitions
 
 ```
-todo → doing               (work started, design.md created)
+todo → doing               (work started, design.md and plan.md created)
 doing → ready-to-ship      (implementation complete)
 ready-to-ship → shipped    (released)
 doing → todo               (back to requirements)
@@ -42,12 +42,15 @@ Infer the appropriate status transition based on context:
 
 If the transition is ambiguous, ask the user to confirm.
 
-### Step 3: Create design.md (for todo → doing transition)
+### Step 3: Create design.md and plan.md (for todo → doing transition)
 
 When transitioning from `todo` to `doing`:
 1. Read the `templates/design.md.tmpl` template
 2. Create `design.md` in the feature directory with the template content
 3. Fill in the `{{title}}` placeholder with the feature title
+4. Read the `templates/plan.md.tmpl` template
+5. Create `plan.md` in the feature directory with the template content
+6. Fill in the `{{title}}` placeholder with the feature title
 
 ### Step 4: Update `meta.yaml`
 
@@ -69,7 +72,7 @@ Append to `log.md`:
 
 ### Step 6: Commit and Push to Remote
 
-1. Commit the updated files (`meta.yaml`, `log.md`, and `design.md` if created) to the feature branch (`feature/<id>`)
+1. Commit the updated files (`meta.yaml`, `log.md`, and `design.md`/`plan.md` if created) to the feature branch (`feature/<id>`)
 2. Push to `origin/feature/<id>` so the kanban (SessionStart hook) reflects the change
 
 If already on the feature branch, commit and push directly. If on another branch (e.g., `main`), checkout the feature branch, commit, push, then return to the original branch.

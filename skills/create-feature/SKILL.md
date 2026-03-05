@@ -1,14 +1,14 @@
 ````skill
 ---
 name: create-feature
-description: "Use when the user wants to create a new feature, start a new project initiative, or when /new-feature command is invoked. Creates the .supercrew/features/<id>/ directory with meta.yaml, prd.md, plan.md, and log.md."
+description: "Use when the user wants to create a new feature, start a new project initiative, or when /new-feature command is invoked. Creates the .supercrew/features/<id>/ directory with meta.yaml, prd.md, and log.md."
 ---
 
 # Create Feature
 
 ## Overview
 
-Create a new feature in the `.supercrew/features/` directory. This skill guides the user through defining a feature, then generates the 4 required files.
+Create a new feature in the `.supercrew/features/` directory. This skill guides the user through defining a feature, then generates the 3 required files.
 
 ## Critical Rule: Gather ALL Input Before ANY Action
 
@@ -50,7 +50,7 @@ Now that all input is gathered, execute the appropriate workflow:
 
 ### Feature Directory and Files
 
-Create the directory `.supercrew/features/<feature-id>/` with 4 files.
+Create the directory `.supercrew/features/<feature-id>/` with 3 files.
 
 **Use the templates in the plugin's `templates/` directory as reference for file structure.** Read the templates first, then generate files with the gathered information filled in.
 
@@ -91,23 +91,7 @@ reviewers: []
 <!-- To be defined -->
 ```
 
-#### File 3: `plan.md`
-
-```markdown
----
-total_tasks: 0
-completed_tasks: 0
-progress: 0
----
-
-# <title> — Implementation Plan
-
-## Tasks
-
-- [ ] Task 1: (to be defined after design approval)
-```
-
-#### File 4: `log.md`
+#### File 3: `log.md`
 
 ```markdown
 # <title> — Progress Log
@@ -126,7 +110,7 @@ After creating all files, present a summary:
 ```
 ✅ Feature created: <feature-id>
 📁 Location: .supercrew/features/<feature-id>/
-📄 Files: meta.yaml, prd.md, plan.md, log.md
+📄 Files: meta.yaml, prd.md, log.md
 🏷️ Status: todo | Priority: <priority> | Owner: <owner>
 ```
 
@@ -139,8 +123,8 @@ Present next steps:
 ```
 Next steps:
 - Refine the requirements in prd.md
-- Use /supercrew:work-on <feature-id> to start working (creates feature branch and design.md)
-- The design.md for technical decisions will be created when entering 'doing' status
+- Use /supercrew:work-on <feature-id> to start working (creates feature branch, design.md, and plan.md)
+- The design.md and plan.md for technical decisions and task breakdown will be created when entering 'doing' status
 ```
 
 ## Validation Rules
