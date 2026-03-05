@@ -29,24 +29,28 @@
 
 #### Per-Feature File Structure
 
-Each feature gets 4 files:
+Each feature gets these files:
 
-| File | Purpose |
-|------|---------|
-| `meta.yaml` | ID, title, status, owner, priority, dates |
-| `design.md` | Background, requirements, design decisions |
-| `plan.md` | Task breakdown with checkboxes, progress tracking |
-| `log.md` | Chronological session logs |
+| File | Purpose | When Created |
+|------|---------|--------------|
+| `meta.yaml` | ID, title, status, owner, priority, dates | Feature creation (`todo`) |
+| `prd.md` | Background, requirements, out of scope | Feature creation (`todo`) |
+| `design.md` | Design decisions, architecture, implementation notes | Work starts (`doing`) |
+| `plan.md` | Task breakdown with checkboxes, progress tracking | Feature creation (`todo`) |
+| `log.md` | Chronological session logs | Feature creation (`todo`) |
 
 ### Status Lifecycle
 
 ```
-planning → designing → ready → active → done
-                ↓                  ↓
-            planning           blocked
-                                  ↓
-                               active
+todo → doing → ready-to-ship → shipped
+  ↑      │
+  └──────┘
 ```
+
+- **todo**: Feature defined with requirements (prd.md)
+- **doing**: Work in progress, design.md created, tasks being completed
+- **ready-to-ship**: Implementation complete, ready for release
+- **shipped**: Released
 
 ### Key Design Decisions
 
@@ -64,7 +68,9 @@ planning → designing → ready → active → done
 | User Action | Skill Invoked |
 |-------------|---------------|
 | "Create a new feature" | `create-feature` |
-| "Mark as ready/active/done" | `update-status` |
+| "Start working on this" | `update-status` (todo → doing) |
+| "Implementation done" | `update-status` (doing → ready-to-ship) |
+| "Ship it" | `update-status` (ready-to-ship → shipped) |
 | "Generate tasks from design" | `sync-plan` |
 | "Update task progress" | `sync-plan` |
 | "End of session / checkpoint" | `log-progress` |
@@ -82,8 +88,8 @@ User: "I want to add user authentication"
    Questions: title, ID, priority, owner, description, PR?
        ↓
    Creates: .supercrew/features/user-auth/
-            - meta.yaml (status: planning)
-            - design.md (status: draft)
+            - meta.yaml (status: todo)
+            - prd.md (status: draft)
             - plan.md (0 tasks)
             - log.md (creation entry)
 ```
@@ -96,24 +102,13 @@ User: "/supercrew:work-on user-auth"
    work-on command
        ↓
    - Checkout/create branch feature/user-auth
-   - Auto-advance planning → designing
+   - Auto-advance todo → doing
+   - Create design.md from template
    - Push branch to remote
    - Load feature context
 ```
 
-### Scenario 3: Design Complete → Ready for Implementation
-
-```
-User: "The design is approved, let's start coding"
-       ↓
-   update-status (designing → ready)
-       ↓
-   sync-plan (generate task breakdown from design.md)
-       ↓
-   update-status (ready → active)
-```
-
-### Scenario 4: During Implementation
+### Scenario 3: Implementation In Progress
 
 ```
 User: "I finished the login form"
@@ -121,7 +116,15 @@ User: "I finished the login form"
    sync-plan (check off tasks, update progress %)
        ↓
    (If progress hits 100%)
-   update-status (active → done)
+   update-status (doing → ready-to-ship)
+```
+
+### Scenario 4: Ready to Ship
+
+```
+User: "Ship it" or "We're releasing this"
+       ↓
+   update-status (ready-to-ship → shipped)
 ```
 
 ### Scenario 5: End of Session
@@ -226,7 +229,7 @@ SuperCrew provides three user-invocable commands:
 **What it does**:
 1. Invokes the `create-feature` skill
 2. Guides through defining title, priority, owner, and description
-3. Generates `meta.yaml`, `design.md`, `plan.md`, and `log.md`
+3. Generates `meta.yaml`, `prd.md`, `plan.md`, and `log.md`
 4. Optionally creates a backlog PR to make the feature visible to the team
 
 ### /supercrew:feature-status
@@ -256,7 +259,7 @@ SuperCrew provides three user-invocable commands:
 **What it does**:
 1. Verifies the feature directory exists
 2. Creates or switches to `feature/<feature-id>` branch
-3. Auto-advances status from `planning` to `designing` if applicable
+3. Auto-advances status from `todo` to `doing` if applicable (and creates `design.md`)
 4. Pushes the branch to remote
 5. Loads feature context (meta.yaml, plan.md progress, last log entry)
 6. Sets this feature as active for all subsequent skill operations
@@ -266,7 +269,7 @@ SuperCrew provides three user-invocable commands:
 🔄 Switched active feature to: user-auth
 🌿 Branch: feature/user-auth
 📋 Title: User Authentication
-🏷️ Status: designing | Priority: P1 | Progress: 0%
+🏷️ Status: doing | Priority: P1 | Progress: 0%
 
 All supercrew skills will now operate on this feature.
 ```
@@ -301,7 +304,7 @@ SuperCrew provides 7 skills that Claude uses to manage feature lifecycle:
 
 **Creates**:
 - `.supercrew/features/<id>/meta.yaml`
-- `.supercrew/features/<id>/design.md`
+- `.supercrew/features/<id>/prd.md`
 - `.supercrew/features/<id>/plan.md`
 - `.supercrew/features/<id>/log.md`
 
@@ -309,35 +312,33 @@ SuperCrew provides 7 skills that Claude uses to manage feature lifecycle:
 
 **Purpose**: Change a feature's status following valid transitions
 
-**When triggered**: User says "mark as ready/active/done/blocked" or context implies status change
+**When triggered**: User says "start working", "done", "ship it" or context implies status change
 
 **Valid transitions**:
 ```
-planning → designing       (design work has started)
-designing → ready          (design approved)
-designing → planning       (design rejected)
-ready → active             (implementation started)
-active → blocked           (blocked by dependency)
-blocked → active           (blocker resolved)
-active → done              (all tasks complete)
+todo → doing               (work started, design.md created)
+doing → ready-to-ship      (implementation complete)
+ready-to-ship → shipped    (released)
+doing → todo               (back to requirements)
 ```
 
 **Process**:
 1. Identify the feature (active or ask user)
 2. Determine new status from context
-3. Update `meta.yaml` status and updated date
-4. Log the change in `log.md`
-5. Commit and push to remote
+3. Create design.md if transitioning to `doing`
+4. Update `meta.yaml` status and updated date
+5. Log the change in `log.md`
+6. Commit and push to remote
 
 ### sync-plan
 
 **Purpose**: Generate or update plan.md with task breakdown
 
-**When triggered**: Design approved and need tasks, or tasks completed
+**When triggered**: Entering `doing` status and need tasks, or tasks completed
 
 **Two modes**:
 
-1. **Generate mode**: After design approval, create task breakdown from `design.md`
+1. **Generate mode**: When entering `doing`, create task breakdown from `design.md`
 2. **Update mode**: During implementation, sync `completed_tasks` and `progress` with actual checklist state
 
 **Process**:
@@ -381,7 +382,7 @@ active → done              (all tasks complete)
 
 **Key behaviors**:
 - Suggests `update-status` when context implies status change
-- Triggers `sync-plan` after design approval or task completion
+- Triggers `sync-plan` after entering `doing` or task completion
 - Reminds about `log-progress` at session end or milestones
 - Performs proactive consistency checks (status vs reality, progress drift)
 
@@ -409,7 +410,7 @@ Metadata file for feature tracking:
 ```yaml
 id: {{id}}
 title: "{{title}}"
-status: planning
+status: todo
 owner: "{{owner}}"
 priority: P2
 teams: []
@@ -425,7 +426,7 @@ updated: "{{date}}"
 |-------|-------------|
 | `id` | Kebab-case feature identifier |
 | `title` | Human-readable feature name |
-| `status` | Current lifecycle status |
+| `status` | Current lifecycle status (todo, doing, ready-to-ship, shipped) |
 | `owner` | Person responsible for the feature |
 | `priority` | P0 (critical) to P3 (low) |
 | `teams` | Teams involved (optional) |
@@ -433,9 +434,9 @@ updated: "{{date}}"
 | `created` | Creation date (YYYY-MM-DD) |
 | `updated` | Last update date (YYYY-MM-DD) |
 
-### design.md.tmpl
+### prd.md.tmpl
 
-Design document for feature specification:
+Product Requirements Document for feature specification (created at feature creation):
 
 ```markdown
 ---
@@ -454,13 +455,42 @@ reviewers: []
 
 <!-- What must this feature do? List functional requirements. -->
 
-## Design
-
-<!-- How will it be implemented? Architecture, data flow, key decisions. -->
-
 ## Out of Scope
 
 <!-- What is explicitly NOT included in this feature? -->
+```
+
+**Frontmatter fields**:
+| Field | Description |
+|-------|-------------|
+| `status` | `draft` or `approved` |
+| `reviewers` | List of reviewers |
+| `approved_by` | Who approved the PRD (optional) |
+
+### design.md.tmpl
+
+Technical design document (created when entering `doing` status):
+
+```markdown
+---
+status: draft
+reviewers: []
+# approved_by: ""
+---
+
+# {{title}} — Technical Design
+
+## Design Decisions
+
+<!-- Key architectural and implementation decisions. Why did you choose this approach? -->
+
+## Architecture
+
+<!-- High-level architecture, data flow, component interactions. -->
+
+## Implementation Notes
+
+<!-- Specific implementation details, edge cases, gotchas. -->
 ```
 
 **Frontmatter fields**:
@@ -507,7 +537,7 @@ Progress log for session tracking:
 
 ## {{date}} — Feature Created
 
-- Feature initialized with status: `planning`
+- Feature initialized with status: `todo`
 - Owner: {{owner}}
 - Priority: P2
 ```

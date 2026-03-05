@@ -1,7 +1,7 @@
 ````skill
 ---
 name: sync-plan
-description: "Use after design approval to generate or update plan.md with task breakdown, or during implementation to update completed_tasks and progress. Syncs plan.md with the current state of the feature."
+description: "Use when entering 'doing' status to generate plan.md with task breakdown from design.md, or during implementation to update completed_tasks and progress. Syncs plan.md with the current state of the feature."
 ---
 
 # Sync Plan
@@ -10,16 +10,16 @@ description: "Use after design approval to generate or update plan.md with task 
 
 Generate or update `plan.md` for a feature. This skill operates in two modes:
 
-1. **Generate mode**: After design is approved, create the task breakdown from `design.md`
+1. **Generate mode**: When entering `doing` status, create the task breakdown from `design.md`
 2. **Update mode**: During implementation, sync `completed_tasks` and `progress` with the actual checklist state
 
 ## Mode 1: Generate Task Breakdown
 
-**When**: Feature status is `ready` (design approved) and `plan.md` has no real tasks yet.
+**When**: Feature status transitions to `doing` and `plan.md` has no real tasks yet.
 
 ### Process
 
-1. Read `design.md` for the active feature
+1. Read `design.md` for the active feature (created when entering `doing` status)
 2. Break down the design into implementation tasks, each task should be:
    - Small enough to complete in one coding session (roughly 2-5 minutes for an AI agent)
    - Independently verifiable with a clear acceptance criterion
@@ -76,6 +76,6 @@ If already on the feature branch, commit and push directly. If on another branch
 - `total_tasks` must equal the actual count of task checkbox items
 - `completed_tasks` must equal the actual count of checked items
 - `progress` must be `Math.round(completed_tasks / total_tasks * 100)`
-- If `progress` reaches 100, suggest invoking `update-status` to transition to `done`
+- If `progress` reaches 100, suggest invoking `update-status` to transition to `ready-to-ship`
 
 ````

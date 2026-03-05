@@ -1,7 +1,7 @@
 ````skill
 ---
 name: update-status
-description: "Use when a feature's status needs to change — after design approval, when starting implementation, when blocked, or when work is complete. Updates meta.yaml status field following the valid state transition graph."
+description: "Use when a feature's status needs to change — when starting work, completing implementation, shipping, or going back to requirements. Updates meta.yaml status field following the valid state transition graph."
 ---
 
 # Update Feature Status
@@ -13,16 +13,13 @@ Update the `status` field in a feature's `meta.yaml`. Status changes must follow
 ## Valid Status Transitions
 
 ```
-planning → designing       (design work has started)
-designing → ready          (design approved, ready for implementation)
-designing → planning       (design rejected, back to planning)
-ready → active             (implementation has started)
-active → blocked           (blocked by dependency or issue)
-blocked → active           (blocker resolved)
-active → done              (all tasks complete, verified)
+todo → doing               (work started, design.md created)
+doing → ready-to-ship      (implementation complete)
+ready-to-ship → shipped    (released)
+doing → todo               (back to requirements)
 ```
 
-**Invalid transitions** (e.g., `planning → active`, `done → active`) must be rejected with an explanation of which intermediate steps are needed.
+**Invalid transitions** (e.g., `todo → shipped`, `shipped → doing`) must be rejected with an explanation of which intermediate steps are needed.
 
 ## Process
 
@@ -37,16 +34,22 @@ Infer the appropriate status transition based on context:
 
 | Signal | Suggested Transition |
 |--------|---------------------|
-| `design.md` frontmatter `status` changed to `approved` | `designing → ready` |
-| User says "start implementing" or begins writing code | `ready → active` |
-| User mentions a blocker or dependency issue | `active → blocked` |
-| Blocker resolved | `blocked → active` |
-| All tasks in `plan.md` checked off, tests pass | `active → done` |
-| Design rejected or needs rework | `designing → planning` |
+| User says "start working on this" or begins work | `todo → doing` |
+| Implementation complete, ready for release | `doing → ready-to-ship` |
+| User says "ship it" or "released" | `ready-to-ship → shipped` |
+| Requirements need rework | `doing → todo` |
+| All tasks in `plan.md` checked off, tests pass | `doing → ready-to-ship` |
 
 If the transition is ambiguous, ask the user to confirm.
 
-### Step 3: Update `meta.yaml`
+### Step 3: Create design.md (for todo → doing transition)
+
+When transitioning from `todo` to `doing`:
+1. Read the `templates/design.md.tmpl` template
+2. Create `design.md` in the feature directory with the template content
+3. Fill in the `{{title}}` placeholder with the feature title
+
+### Step 4: Update `meta.yaml`
 
 1. Read the current `meta.yaml`
 2. Validate the transition is legal (see graph above)
@@ -54,7 +57,7 @@ If the transition is ambiguous, ask the user to confirm.
 4. Update `updated` date to today (YYYY-MM-DD)
 5. Write the file
 
-### Step 4: Log the Change
+### Step 5: Log the Change
 
 Append to `log.md`:
 
@@ -64,9 +67,9 @@ Append to `log.md`:
 - Reason: <brief reason for the transition>
 ```
 
-### Step 5: Commit and Push to Remote
+### Step 6: Commit and Push to Remote
 
-1. Commit the updated `meta.yaml` and `log.md` to the feature branch (`feature/<id>`)
+1. Commit the updated files (`meta.yaml`, `log.md`, and `design.md` if created) to the feature branch (`feature/<id>`)
 2. Push to `origin/feature/<id>` so the kanban (SessionStart hook) reflects the change
 
 If already on the feature branch, commit and push directly. If on another branch (e.g., `main`), checkout the feature branch, commit, push, then return to the original branch.

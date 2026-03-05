@@ -95,6 +95,7 @@ done
 active_detail=""
 if [ -n "$active_feature_id" ] && [ -d "$features_dir/$active_feature_id" ]; then
     active_meta="$features_dir/$active_feature_id/meta.yaml"
+    active_prd="$features_dir/$active_feature_id/prd.md"
     active_design="$features_dir/$active_feature_id/design.md"
     active_plan="$features_dir/$active_feature_id/plan.md"
     active_log="$features_dir/$active_feature_id/log.md"
@@ -103,7 +104,20 @@ if [ -n "$active_feature_id" ] && [ -d "$features_dir/$active_feature_id" ]; the
 
     if [ -f "$active_meta" ]; then
         meta_content=$(cat "$active_meta")
+        active_status=$(echo "$meta_content" | grep '^status:' | sed 's/^status: *//' | head -1)
         active_detail="${active_detail}\n### meta.yaml\n\`\`\`yaml\n$(escape_for_json "$meta_content")\n\`\`\`"
+    fi
+
+    # Show prd.md for all statuses (it's the requirements doc)
+    if [ -f "$active_prd" ]; then
+        prd_header=$(head -20 "$active_prd")
+        active_detail="${active_detail}\n\n### PRD (prd.md)\n$(escape_for_json "$prd_header")"
+    fi
+
+    # Show design.md only for doing+ statuses (when it exists)
+    if [ -f "$active_design" ]; then
+        design_header=$(head -20 "$active_design")
+        active_detail="${active_detail}\n\n### Technical Design (design.md)\n$(escape_for_json "$design_header")"
     fi
 
     # Include last 30 lines of log.md for recent context

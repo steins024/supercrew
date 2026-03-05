@@ -11,9 +11,13 @@ The user wants to switch the active feature for this session.
    - Check if a local branch `feature/<feature-id>` already exists.
    - If it exists, switch to it with `git checkout feature/<feature-id>`.
    - If it doesn't exist, create and switch to it with `git checkout -b feature/<feature-id>`.
-4. **Auto-advance status if `planning`:**
-   - Read the feature's `meta.yaml`. If `status` is `planning`, update it to `designing`.
-   - Stage and commit the change: `git add .supercrew/features/<feature-id>/meta.yaml && git commit -m "chore: advance <feature-id> status to designing"`.
+4. **Auto-advance status if `todo`:**
+   - Read the feature's `meta.yaml`. If `status` is `todo`:
+     - Update status to `doing`
+     - Create `design.md` from the `templates/design.md.tmpl` template (fill in `{{title}}` placeholder)
+     - Update `meta.yaml` `updated` date
+     - Log the status change in `log.md`
+   - Stage and commit: `git add .supercrew/features/<feature-id>/ && git commit -m "chore: advance <feature-id> status to doing"`.
 5. **Push the branch to remote:**
    - Run `git push -u origin feature/<feature-id>` to ensure the remote branch exists and is tracked.
 6. Read the feature's `meta.yaml`, `plan.md` progress, and last `log.md` entry.

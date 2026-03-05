@@ -1,6 +1,6 @@
 id: schema-validation
 title: "Pre-commit Schema Validation"
-status: planning
+status: todo
 owner: "Dazhen Pan"
 priority: P1
 teams: []

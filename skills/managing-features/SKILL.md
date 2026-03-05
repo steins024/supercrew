@@ -23,14 +23,14 @@ At session start, the SessionStart hook determines which feature is active. This
 
 ### Trigger `update-status`
 
-- When `design.md` frontmatter `status` changes (e.g., `draft → approved` → suggest `designing → ready`)
-- When user starts writing implementation code and feature is still in `ready` → suggest `ready → active`
-- When all `plan.md` tasks are complete → suggest `active → done`
-- When user mentions a blocker → suggest `active → blocked`
+- When user says "start working" or begins implementation and feature is in `todo` → suggest `todo → doing`
+- When all `plan.md` tasks are complete → suggest `doing → ready-to-ship`
+- When user says "ship it" or "released" → suggest `ready-to-ship → shipped`
+- When requirements need rework → suggest `doing → todo`
 
 ### Trigger `sync-plan`
 
-- After design is approved and `plan.md` has no real tasks → generate task breakdown
+- When feature enters `doing` status and `plan.md` has no real tasks → generate task breakdown from `design.md`
 - After completing tasks in code → update `plan.md` progress counters
 - When user asks for progress update → sync and report
 
@@ -44,15 +44,15 @@ At session start, the SessionStart hook determines which feature is active. This
 
 During the session, periodically check for inconsistencies:
 
-1. **Status vs. reality**: Feature status says `planning` but user is writing code → suggest status update
+1. **Status vs. reality**: Feature status says `todo` but user is writing code → suggest status update to `doing`
 2. **Progress drift**: `plan.md` `completed_tasks` doesn't match actual checked items → suggest sync
 3. **Missing log**: Long session with no `log.md` entry → remind user to log before ending
-4. **Design skip**: Feature jumped to `active` without `design.md` being `approved` → warn about skipping design review
+4. **Missing design**: Feature is `doing` but has no `design.md` → warn and offer to create it
 
 ## Communication Style
 
 - Be concise — one-line suggestions, not paragraphs
-- Frame as suggestions, not commands: "Would you like me to update the feature status to `active`?"
+- Frame as suggestions, not commands: "Would you like me to update the feature status to `doing`?"
 - Group related updates: "I'll update the status and sync the plan progress."
 - Don't interrupt flow — wait for natural pauses (task completion, topic change) to suggest updates
 

@@ -119,19 +119,25 @@ else
 fi
 
 # Status display order
-STATUS_ORDER=("planning" "designing" "ready" "active" "blocked" "done")
+STATUS_ORDER=("todo" "doing" "ready-to-ship" "shipped")
 
-status_label() { printf '%s' "${1^}"; }
+status_label() {
+    case "$1" in
+        todo)          printf '%s' "Todo" ;;
+        doing)         printf '%s' "Doing" ;;
+        ready-to-ship) printf '%s' "Ready to Ship" ;;
+        shipped)       printf '%s' "Shipped" ;;
+        *)             printf '%s' "$1" ;;
+    esac
+}
 
 status_color() {
     case "$1" in
-        planning)  printf '%s' "$C_DIM" ;;
-        designing) printf '%s' "$C_MAGENTA" ;;
-        ready)     printf '%s' "$C_CYAN" ;;
-        active)    printf '%s' "$C_YELLOW" ;;
-        blocked)   printf '%s' "$C_RED" ;;
-        done)      printf '%s' "$C_GREEN" ;;
-        *)         printf '' ;;
+        todo)           printf '%s' "$C_DIM" ;;
+        doing)          printf '%s' "$C_YELLOW" ;;
+        ready-to-ship)  printf '%s' "$C_CYAN" ;;
+        shipped)        printf '%s' "$C_GREEN" ;;
+        *)              printf '' ;;
     esac
 }
 

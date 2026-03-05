@@ -1,7 +1,7 @@
 ````skill
 ---
 name: create-feature
-description: "Use when the user wants to create a new feature, start a new project initiative, or when /new-feature command is invoked. Creates the .supercrew/features/<id>/ directory with meta.yaml, design.md, plan.md, and log.md."
+description: "Use when the user wants to create a new feature, start a new project initiative, or when /new-feature command is invoked. Creates the .supercrew/features/<id>/ directory with meta.yaml, prd.md, plan.md, and log.md."
 ---
 
 # Create Feature
@@ -59,7 +59,7 @@ Create the directory `.supercrew/features/<feature-id>/` with 4 files.
 ```yaml
 id: <feature-id>
 title: "<title>"
-status: planning
+status: todo
 owner: "<owner>"
 priority: <P0|P1|P2|P3>
 teams: []
@@ -68,7 +68,7 @@ created: "<YYYY-MM-DD>"
 updated: "<YYYY-MM-DD>"
 ```
 
-#### File 2: `design.md`
+#### File 2: `prd.md`
 
 ```markdown
 ---
@@ -83,10 +83,6 @@ reviewers: []
 <Brief description from user input>
 
 ## Requirements
-
-<!-- To be refined during brainstorming -->
-
-## Design
 
 <!-- To be refined during brainstorming -->
 
@@ -118,7 +114,7 @@ progress: 0
 
 ## <YYYY-MM-DD> — Feature Created
 
-- Feature initialized with status: `planning`
+- Feature initialized with status: `todo`
 - Owner: <owner>
 - Priority: <priority>
 ```
@@ -130,8 +126,8 @@ After creating all files, present a summary:
 ```
 ✅ Feature created: <feature-id>
 📁 Location: .supercrew/features/<feature-id>/
-📄 Files: meta.yaml, design.md, plan.md, log.md
-🏷️ Status: planning | Priority: <priority> | Owner: <owner>
+📄 Files: meta.yaml, prd.md, plan.md, log.md
+🏷️ Status: todo | Priority: <priority> | Owner: <owner>
 ```
 
 If a PR was created, include the PR URL.
@@ -142,9 +138,9 @@ Present next steps:
 
 ```
 Next steps:
-- Use brainstorming to refine the design in design.md
-- Once design is approved, use sync-plan to generate the implementation plan
-- Use /supercrew:work-on <feature-id> to start working on this feature (creates a feature branch)
+- Refine the requirements in prd.md
+- Use /supercrew:work-on <feature-id> to start working (creates feature branch and design.md)
+- The design.md for technical decisions will be created when entering 'doing' status
 ```
 
 ## Validation Rules
@@ -152,12 +148,12 @@ Next steps:
 - Feature ID must be kebab-case (lowercase, hyphens only, no spaces)
 - Feature ID must be unique (check `.supercrew/features/` for existing directories)
 - Priority must be one of: P0, P1, P2, P3
-- Status is always `planning` for new features
+- Status is always `todo` for new features
 - `created` and `updated` dates use YYYY-MM-DD format (today's date)
 
 ## Important
 
-- Do NOT start implementation after creating the feature. The next step is brainstorming/design.
+- Do NOT start implementation after creating the feature. The next step is refining requirements.
 - If `.supercrew/features/` directory doesn't exist yet, create it.
 - If `.supercrew/` directory doesn't exist yet, create it.
 
