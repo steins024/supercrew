@@ -16,7 +16,7 @@ fi
 yaml_val() {
     local content="$1" key="$2"
     local raw
-    raw=$(echo "$content" | grep "^${key}:" | head -1 | sed "s/^${key}: *//" )
+    raw=$(echo "$content" | grep "^${key}:" | head -1 | sed "s/^${key}: *//" || true)
     # Strip surrounding quotes
     raw="${raw#\"}"
     raw="${raw%\"}"
@@ -29,7 +29,7 @@ yaml_val() {
 yaml_list() {
     local content="$1" key="$2"
     local raw
-    raw=$(echo "$content" | grep "^${key}:" | head -1 | sed "s/^${key}: *//" )
+    raw=$(echo "$content" | grep "^${key}:" | head -1 | sed "s/^${key}: *//" || true)
     raw="${raw#\[}"
     raw="${raw%\]}"
     # Strip quotes and commas, collapse whitespace
@@ -70,6 +70,9 @@ for feature_dir in "$FEATURES_DIR"/*/; do
     owner=$(yaml_val "$meta_content" "owner")
     blocked_by=$(yaml_list "$meta_content" "blocked_by")
 
+    # Default title to directory name if missing
+    [ -z "$title" ] && title="$fid"
+
     # Get progress from plan.md (try remote branch first, then local)
     progress=""
     plan_content=""
@@ -78,8 +81,10 @@ for feature_dir in "$FEATURES_DIR"/*/; do
         plan_content=$(cat "$feature_dir/plan.md")
     fi
     if [ -n "$plan_content" ]; then
-        progress=$(echo "$plan_content" | grep '^progress:' | sed 's/^progress: *//' | head -1)
+        progress=$(echo "$plan_content" | grep '^progress:' | sed 's/^progress: *//' | head -1 || true)
     fi
+    # Ensure progress is numeric (default to empty if not)
+    [[ "$progress" =~ ^[0-9]+$ ]] || progress=""
 
     # Priority sort key (P0=0 .. P3=3, unknown=9)
     psort="${priority#P}"
