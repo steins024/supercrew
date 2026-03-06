@@ -1,4 +1,10 @@
-# Status Schema Change — Plan
+---
+total_tasks: 13
+completed_tasks: 13
+progress: 100
+---
+
+# Status Schema Change — Implementation Plan
 
 ## Tasks
 
@@ -15,7 +21,3 @@
 - [x] Update session-start hook
 - [x] Update existing feature meta.yaml files
 - [x] Update README and docs
-
-## Progress
-
-100% complete - all tasks done.
