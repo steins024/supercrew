@@ -1,6 +1,6 @@
 ````skill
 ---
-name: create-task
+name: create
 description: "Use when the user wants to create a new feature or task. Creates a backlog branch and the .supercrew/tasks/<id>/ directory with meta.yaml and prd.md with real content."
 ---
 

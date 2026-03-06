@@ -1,6 +1,6 @@
 ````skill
 ---
-name: do-task
+name: do
 description: "Use when managing feature lifecycle — starting work (todo → doing), completing implementation (doing → ready-to-ship), shipping (ready-to-ship → shipped), or going back to requirements (doing → todo). Handles branch creation and dev-* file management."
 ---
 

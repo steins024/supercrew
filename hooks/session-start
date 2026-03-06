@@ -22,17 +22,16 @@ Invoke the relevant skill BEFORE any response or action — including clarifying
 
 | Trigger | Skill to Invoke |
 |---------|-----------------|
-| User wants to create a new feature/task | `supercrew:create-task` |
-| User wants to start working on a feature (todo → doing) | `supercrew:do-task` |
-| User says "done", "ready to ship", "ship it" or status changes | `supercrew:do-task` |
-| User wants to sync design/plan/log updates | `supercrew:sync-supercrew` |
+| User wants to create a new feature/task | `supercrew:create` |
+| User wants to start working on a feature (todo → doing) | `supercrew:do` |
+| User says "done", "ready to ship", "ship it" or status changes | `supercrew:do` |
+| User wants to sync design/plan/log updates | `supercrew:sync` |
 
 ## Available Commands
 
 - `/supercrew:create` — Create a new feature in backlog
-- `/supercrew:start <id>` — Start working on a feature
+- `/supercrew:do` — Manage feature lifecycle (start, complete, ship)
 - `/supercrew:sync` — Sync all .supercrew updates
-- `/supercrew:status` — Show all features in a table
 
 ## Status Lifecycle
 
@@ -228,7 +227,7 @@ fi
 # Build no-match prompt
 no_match_prompt=""
 if [ -z "$active_feature_id" ] && [ "$feature_count" -gt 0 ]; then
-    no_match_prompt="\n\n**No active feature matched from branch '${current_branch}'.** Ask the user which feature they want to work on, or use /supercrew:start <feature-id> to begin work."
+    no_match_prompt="\n\n**No active feature matched from branch '${current_branch}'.** Ask the user which feature they want to work on, or use /supercrew:do to begin work."
 fi
 
 # Compose full context

@@ -1,6 +1,6 @@
 ````skill
 ---
-name: sync-supercrew
+name: sync
 description: "Use to sync all .supercrew updates during development — design iterations (dev-design.md), task updates (dev-plan.md), and progress logging (dev-log.md). Does not auto-commit or push."
 ---
 
