@@ -7,13 +7,52 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Read using-supercrew skill content for context injection
-using_supercrew_content=$(cat "${PLUGIN_ROOT}/skills/using-supercrew/SKILL.md" 2>&1 || echo "Error reading using-supercrew skill")
+# Skill routing guidance (embedded, replaces using-supercrew skill)
+skill_guidance='<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a supercrew skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+Invoke the relevant skill BEFORE any response or action — including clarifying questions.
+</EXTREMELY-IMPORTANT>
+
+# Supercrew Skills
+
+## When to Use Each Skill
+
+| Trigger | Skill to Invoke |
+|---------|-----------------|
+| User wants to create a new feature/task | `supercrew:create-task` |
+| User wants to start working on a feature (todo → doing) | `supercrew:do-task` |
+| User says "done", "ready to ship", "ship it" or status changes | `supercrew:do-task` |
+| User wants to sync design/plan/log updates | `supercrew:sync-supercrew` |
+
+## Available Commands
+
+- `/supercrew:create` — Create a new feature in backlog
+- `/supercrew:start <id>` — Start working on a feature
+- `/supercrew:sync` — Sync all .supercrew updates
+- `/supercrew:status` — Show all features in a table
+
+## Status Lifecycle
+
+```
+todo → doing → ready-to-ship → shipped
+  ↑      │
+  └──────┘
+```
+
+## Branch Naming Convention
+
+- Backlog: `user/<username>/backlog-<feature-id>`
+- Active work: `user/<username>/<feature-id>`
+
+## File Structure
+
+- At creation: `meta.yaml`, `prd.md`
+- When work starts: `dev-design.md`, `dev-plan.md`, `dev-log.md`'
 
 # Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass.
-# IMPORTANT: only call this ONCE per piece of external content.
-# Embedding an already-escaped string into context then re-escaping causes double-escaping.
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -24,14 +63,14 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-# Escape the skill content once — embed pre-escaped variable directly in heredoc
-using_escaped=$(escape_for_json "$using_supercrew_content")
+# Escape the skill guidance once
+guidance_escaped=$(escape_for_json "$skill_guidance")
 
 # Check if .supercrew/features/ exists in the current working directory
 features_dir=".supercrew/features"
 if [ ! -d "$features_dir" ]; then
     # No .supercrew/features/ found — inject skill context with minimal project info
-    context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n**Below is the full content of your 'supercrew:using-supercrew' skill — your guide to feature lifecycle management. For all other skills, use the Skill tool:**\n\n${using_escaped}\n\nThis project does not have a .supercrew/features/ directory yet. If the user wants to start tracking features, suggest using /supercrew:new-feature.\n</EXTREMELY_IMPORTANT>"
+    context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n\nThis project does not have a .supercrew/features/ directory yet. If the user wants to start tracking features, suggest using /supercrew:create.\n</EXTREMELY_IMPORTANT>"
     cat <<EOF
 {
   "additional_context": "${context}",
@@ -49,12 +88,33 @@ fi
 # Get current branch for active feature matching
 current_branch=$(git branch --show-current 2>/dev/null || echo "")
 active_feature_id=""
+branch_type=""
 
-# Try to match branch name to feature ID (feature/<id> pattern)
-if [[ "$current_branch" == feature/* ]]; then
+# Try to match branch name to feature ID
+# New pattern: user/<username>/<feature-id> or user/<username>/backlog-<feature-id>
+# Legacy pattern: feature/<id>
+
+if [[ "$current_branch" == user/*/backlog-* ]]; then
+    # user/<username>/backlog-<feature-id> pattern
+    candidate="${current_branch##*/}"        # get last part: backlog-<feature-id>
+    candidate="${candidate#backlog-}"        # remove backlog- prefix
+    if [ -d "$features_dir/$candidate" ]; then
+        active_feature_id="$candidate"
+        branch_type="backlog"
+    fi
+elif [[ "$current_branch" == user/*/* ]]; then
+    # user/<username>/<feature-id> pattern (not backlog)
+    candidate="${current_branch##*/}"        # get last part: <feature-id>
+    if [ -d "$features_dir/$candidate" ]; then
+        active_feature_id="$candidate"
+        branch_type="work"
+    fi
+elif [[ "$current_branch" == feature/* ]]; then
+    # Legacy: feature/<id> pattern
     candidate="${current_branch#feature/}"
     if [ -d "$features_dir/$candidate" ]; then
         active_feature_id="$candidate"
+        branch_type="legacy"
     fi
 fi
 
@@ -70,16 +130,33 @@ for feature_dir in "$features_dir"/*/; do
     meta_file="$feature_dir/meta.yaml"
 
     if [ -f "$meta_file" ]; then
-        # Try remote branch origin/feature/<fid> for latest, fall back to local
-        meta_content=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || cat "$meta_file")
+        # Try remote branches for latest (new pattern first, then legacy)
+        # Extract username from current branch if available
+        remote_meta=""
+        if [[ "$current_branch" == user/*/* ]]; then
+            username_part="${current_branch#user/}"
+            username_part="${username_part%%/*}"
+            remote_meta=$(git show "origin/user/${username_part}/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || true)
+        fi
+        if [ -z "$remote_meta" ]; then
+            remote_meta=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || true)
+        fi
+        meta_content="${remote_meta:-$(cat "$meta_file")}"
+
         title=$(echo "$meta_content" | { grep '^title:' || true; } | sed 's/^title: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
         status=$(echo "$meta_content" | { grep '^status:' || true; } | sed 's/^status: *//' | head -1)
         priority=$(echo "$meta_content" | { grep '^priority:' || true; } | sed 's/^priority: *//' | head -1)
         owner=$(echo "$meta_content" | { grep '^owner:' || true; } | sed 's/^owner: *"\{0,1\}\(.*\)"\{0,1\}$/\1/' | head -1)
 
-        # Get progress from plan.md (try remote branch first, fall back to local)
+        # Get progress from dev-plan.md (new) or plan.md (legacy)
         progress="N/A"
-        plan_content=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/plan.md" 2>/dev/null || cat "$feature_dir/plan.md" 2>/dev/null || echo "")
+        plan_content=""
+        # Try dev-plan.md first (new pattern)
+        plan_content=$(cat "$feature_dir/dev-plan.md" 2>/dev/null || true)
+        # Fall back to plan.md (legacy)
+        if [ -z "$plan_content" ]; then
+            plan_content=$(cat "$feature_dir/plan.md" 2>/dev/null || true)
+        fi
         if [ -n "$plan_content" ]; then
             prog_val=$(echo "$plan_content" | { grep '^progress:' || true; } | sed 's/^progress: *//' | head -1)
             if [ -n "$prog_val" ]; then
@@ -96,11 +173,23 @@ active_detail=""
 if [ -n "$active_feature_id" ] && [ -d "$features_dir/$active_feature_id" ]; then
     active_meta="$features_dir/$active_feature_id/meta.yaml"
     active_prd="$features_dir/$active_feature_id/prd.md"
-    active_design="$features_dir/$active_feature_id/design.md"
-    active_plan="$features_dir/$active_feature_id/plan.md"
-    active_log="$features_dir/$active_feature_id/log.md"
+    # New naming: dev-* files
+    active_design="$features_dir/$active_feature_id/dev-design.md"
+    active_plan="$features_dir/$active_feature_id/dev-plan.md"
+    active_log="$features_dir/$active_feature_id/dev-log.md"
+    # Legacy naming fallback
+    [ -f "$active_design" ] || active_design="$features_dir/$active_feature_id/design.md"
+    [ -f "$active_plan" ] || active_plan="$features_dir/$active_feature_id/plan.md"
+    [ -f "$active_log" ] || active_log="$features_dir/$active_feature_id/log.md"
 
-    active_detail="\n\n## Active Feature: ${active_feature_id}\n\nMatched via branch: ${current_branch}\n"
+    branch_info=""
+    case "$branch_type" in
+        backlog) branch_info="(backlog branch)" ;;
+        work)    branch_info="(work branch)" ;;
+        legacy)  branch_info="(legacy branch pattern)" ;;
+    esac
+
+    active_detail="\n\n## Active Feature: ${active_feature_id}\n\nMatched via branch: ${current_branch} ${branch_info}\n"
 
     if [ -f "$active_meta" ]; then
         meta_content=$(cat "$active_meta")
@@ -114,33 +203,36 @@ if [ -n "$active_feature_id" ] && [ -d "$features_dir/$active_feature_id" ]; the
         active_detail="${active_detail}\n\n### PRD (prd.md)\n$(escape_for_json "$prd_header")"
     fi
 
-    # Show design.md only for doing+ statuses (when it exists)
+    # Show design file only for doing+ statuses (when it exists)
     if [ -f "$active_design" ]; then
         design_header=$(head -20 "$active_design")
-        active_detail="${active_detail}\n\n### Technical Design (design.md)\n$(escape_for_json "$design_header")"
+        design_name=$(basename "$active_design")
+        active_detail="${active_detail}\n\n### Technical Design (${design_name})\n$(escape_for_json "$design_header")"
     fi
 
-    # Include last 30 lines of log.md for recent context
+    # Include last 30 lines of log for recent context
     if [ -f "$active_log" ]; then
         log_tail=$(tail -30 "$active_log")
-        active_detail="${active_detail}\n\n### Recent Log (last 30 lines)\n$(escape_for_json "$log_tail")"
+        log_name=$(basename "$active_log")
+        active_detail="${active_detail}\n\n### Recent Log - ${log_name} (last 30 lines)\n$(escape_for_json "$log_tail")"
     fi
 
     # Include plan progress summary
     if [ -f "$active_plan" ]; then
         plan_header=$(head -10 "$active_plan")
-        active_detail="${active_detail}\n\n### Plan Progress\n\`\`\`\n$(escape_for_json "$plan_header")\n\`\`\`"
+        plan_name=$(basename "$active_plan")
+        active_detail="${active_detail}\n\n### Plan Progress (${plan_name})\n\`\`\`\n$(escape_for_json "$plan_header")\n\`\`\`"
     fi
 fi
 
 # Build no-match prompt
 no_match_prompt=""
 if [ -z "$active_feature_id" ] && [ "$feature_count" -gt 0 ]; then
-    no_match_prompt="\n\n**No active feature matched from branch '${current_branch}'.** Ask the user which feature they want to work on, or use /supercrew:work-on <feature-id> to set it."
+    no_match_prompt="\n\n**No active feature matched from branch '${current_branch}'.** Ask the user which feature they want to work on, or use /supercrew:start <feature-id> to begin work."
 fi
 
-# Compose full context — using_escaped already computed at the top; embed directly (no second escape pass)
-context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n**Below is the full content of your 'supercrew:using-supercrew' skill — your guide to feature lifecycle management. For all other skills, use the Skill tool:**\n\n${using_escaped}\n</EXTREMELY_IMPORTANT>\n\n<supercrew-context>\nThis project has ${feature_count} feature(s) tracked in .supercrew/features/.\n\n## All Features\n${features_summary}${active_detail}${no_match_prompt}\n</supercrew-context>"
+# Compose full context
+context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n</EXTREMELY_IMPORTANT>\n\n<supercrew-context>\nThis project has ${feature_count} feature(s) tracked in .supercrew/features/.\n\n## All Features\n${features_summary}${active_detail}${no_match_prompt}\n</supercrew-context>"
 
 cat <<EOF
 {

@@ -27,16 +27,27 @@ Start a new session. Claude will proactively announce which supercrew skill it i
 ## How It Works
 
 SuperCrew injects context at session start via a `SessionStart` hook that:
-- Reads the `using-supercrew` skill and passes it directly as session context
+- Embeds skill routing guidance directly into session context
 - Scans `.supercrew/features/` for tracked features
-- Auto-loads the active feature based on your current git branch (`feature/<id>`)
+- Auto-loads the active feature based on your current git branch
 - Provides a summary table of all features and their statuses
+
+### Branch Naming Convention
+
+SuperCrew uses user-namespaced branches for better team collaboration:
+
+| Stage | Branch Pattern | Example |
+|-------|----------------|---------|
+| Backlog | `user/<username>/backlog-<feature-id>` | `user/steins-z/backlog-dark-mode` |
+| Active work | `user/<username>/<feature-id>` | `user/steins-z/dark-mode` |
+
+Username is derived from `git config user.name`, converted to lowercase with hyphens (e.g., "Steins Z" → `steins-z`).
 
 ### Proactive Skill Triggering
 
 Skills activate using the **1% rule**: if there is even a 1% chance a skill applies, Claude invokes it before responding — including before clarifying questions. When a skill fires, Claude announces it:
 
-> *"Using supercrew:create-feature to set up the new feature directory..."*
+> *"Using supercrew:create-task to set up the new feature directory..."*
 
 This means you never need to call skills manually. Just describe what you want.
 
@@ -51,32 +62,29 @@ todo → doing → ready-to-ship → shipped
 Each feature lives in `.supercrew/features/<id>/` with files:
 
 | File | Contents | When Created |
-|---|---|---|
+|------|----------|--------------|
 | `meta.yaml` | id, title, status, priority, owner | Feature creation (`todo`) |
 | `prd.md` | background, requirements, out of scope | Feature creation (`todo`) |
-| `design.md` | design decisions, architecture, implementation notes | Work starts (`doing`) |
-| `plan.md` | task checklist with progress tracking | Feature creation (`todo`) |
-| `log.md` | chronological session log | Feature creation (`todo`) |
+| `dev-design.md` | design decisions, architecture, implementation notes | Work starts (`doing`) |
+| `dev-plan.md` | task checklist with progress tracking | Work starts (`doing`) |
+| `dev-log.md` | chronological development log | Work starts (`doing`) |
 
 ## Skills
 
 | Skill | When it activates |
-|---|---|
-| `using-supercrew` | Injected at session start — establishes proactive behavior rules |
-| `create-feature` | User wants to create or start a new feature |
-| `update-status` | Status transitions (e.g. "start working", "ship it") |
-| `sync-plan` | Generating or updating task breakdowns from design |
-| `log-progress` | End of session, checkpoint, or completed work |
-| `managing-features` | General lifecycle orchestration when `.supercrew/features/` exists |
-| `kanban` | Displaying a kanban board of all features |
+|-------|-------------------|
+| `create-task` | User wants to create a new feature — creates backlog branch, `meta.yaml`, and `prd.md` with real content |
+| `do-task` | Status transitions — starting work, marking done, shipping. Creates `dev-*` files on `todo → doing` |
+| `sync-supercrew` | Syncing design iterations, task updates, and progress logging during development |
 
 ## Commands
 
 | Command | Description |
-|---|---|
-| `/supercrew:new-feature` | Create a new feature with guided prompts |
-| `/supercrew:feature-status` | Show all features in a status table |
-| `/supercrew:work-on <id>` | Switch the active feature for this session |
+|---------|-------------|
+| `/supercrew:create` | Create a new feature in the backlog |
+| `/supercrew:start <id>` | Start working on a feature (creates work branch and dev-* files) |
+| `/supercrew:sync` | Sync all .supercrew updates (design, plan, log) |
+| `/supercrew:status` | Show all features in a status table |
 
 ## Example Usage
 
@@ -89,18 +97,19 @@ Just talk naturally — SuperCrew skills activate automatically based on context
 "Start tracking a caching layer feature"
 ```
 
-### Working on a Feature
+### Starting Work on a Feature
 ```
-"/supercrew:work-on dark-mode"
-"Switch to the auth feature"
-"Show me the kanban board"
+"/supercrew:start dark-mode"
+"Start working on the auth feature"
+"Begin implementation of dark-mode"
 ```
 
 ### During Implementation
 ```
 "I finished the theme toggle component"
-"Mark task 3 as done"
-"What's left to do on this feature?"
+"Update the plan - task 3 is done"
+"Sync my progress"
+"/supercrew:sync"
 ```
 
 ### Status Updates
@@ -110,11 +119,24 @@ Just talk naturally — SuperCrew skills activate automatically based on context
 "We need to go back to requirements"
 ```
 
-### End of Session
+### Checking Status
 ```
-"I'm done for today"
-"Log my progress"
-"Wrap up this session"
+"/supercrew:status"
+"Show me all features"
+"What's the status of our features?"
+```
+
+## File Structure
+
+```
+.supercrew/
+└── features/
+    └── <feature-id>/
+        ├── meta.yaml        # Feature metadata (always present)
+        ├── prd.md           # Product requirements (always present)
+        ├── dev-design.md    # Technical design (created when work starts)
+        ├── dev-plan.md      # Task breakdown (created when work starts)
+        └── dev-log.md       # Development log (created when work starts)
 ```
 
 ## Updating
