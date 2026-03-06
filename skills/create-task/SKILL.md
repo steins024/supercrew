@@ -1,14 +1,14 @@
 ````skill
 ---
 name: create-task
-description: "Use when the user wants to create a new feature or task. Creates a backlog branch and the .supercrew/features/<id>/ directory with meta.yaml and prd.md with real content."
+description: "Use when the user wants to create a new feature or task. Creates a backlog branch and the .supercrew/tasks/<id>/ directory with meta.yaml and prd.md with real content."
 ---
 
 # Create Task
 
 ## Overview
 
-Create a new feature in the `.supercrew/features/` directory. This skill guides the user through defining a feature, creates a user-namespaced backlog branch, and generates `meta.yaml` and `prd.md` with real content.
+Create a new feature in the `.supercrew/tasks/` directory. This skill guides the user through defining a feature, creates a user-namespaced backlog branch, and generates `meta.yaml` and `prd.md` with real content.
 
 ## Critical Rule: Gather ALL Input Before ANY Action
 
@@ -46,7 +46,7 @@ Example: `user/steins-z/backlog-architecture-refinement`
 
 ### Step 4: Create Feature Directory and Files
 
-Create the directory `.supercrew/features/<feature-id>/` with 2 files.
+Create the directory `.supercrew/tasks/<feature-id>/` with 2 files.
 
 #### File 1: `meta.yaml`
 
@@ -94,7 +94,7 @@ After creating all files, present a summary:
 ```
 ✅ Feature created: <feature-id>
 🌿 Branch: user/<username>/backlog-<feature-id>
-📁 Location: .supercrew/features/<feature-id>/
+📁 Location: .supercrew/tasks/<feature-id>/
 📄 Files: meta.yaml, prd.md
 🏷️ Status: todo | Priority: <priority> | Owner: <owner>
 ```
@@ -115,7 +115,7 @@ Next steps:
 ## Validation Rules
 
 - Feature ID must be kebab-case (lowercase, hyphens only, no spaces)
-- Feature ID must be unique (check `.supercrew/features/` for existing directories)
+- Feature ID must be unique (check `.supercrew/tasks/` for existing directories)
 - Priority must be one of: P0, P1, P2, P3
 - Status is always `todo` for new features
 - `created` and `updated` dates use YYYY-MM-DD format (today's date)
@@ -125,7 +125,7 @@ Next steps:
 
 - Do NOT start implementation after creating the feature
 - Do NOT auto-push — user controls when to push
-- If `.supercrew/features/` directory doesn't exist yet, create it
+- If `.supercrew/tasks/` directory doesn't exist yet, create it
 - If `.supercrew/` directory doesn't exist yet, create it
 - The `prd.md` must have real content, not empty template placeholders
 

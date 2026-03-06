@@ -1,6 +1,6 @@
 # SuperCrew
 
-AI-driven feature lifecycle management for Claude Code. Tracks features through a structured lifecycle — from requirements through design, implementation, and shipping — using `.supercrew/features/` directories.
+AI-driven feature lifecycle management for Claude Code. Tracks features through a structured lifecycle — from requirements through design, implementation, and shipping — using `.supercrew/tasks/` directories.
 
 ## Installation
 
@@ -28,7 +28,7 @@ Start a new session. Claude will proactively announce which supercrew skill it i
 
 SuperCrew injects context at session start via a `SessionStart` hook that:
 - Embeds skill routing guidance directly into session context
-- Scans `.supercrew/features/` for tracked features
+- Scans `.supercrew/tasks/` for tracked features
 - Auto-loads the active feature based on your current git branch
 - Provides a summary table of all features and their statuses
 
@@ -59,7 +59,7 @@ todo → doing → ready-to-ship → shipped
   └──────┘
 ```
 
-Each feature lives in `.supercrew/features/<id>/` with files:
+Each feature lives in `.supercrew/tasks/<id>/` with files:
 
 | File | Contents | When Created |
 |------|----------|--------------|

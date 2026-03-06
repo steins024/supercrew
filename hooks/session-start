@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart hook for supercrew plugin
-# Detects .supercrew/features/ and injects active feature context
+# Detects .supercrew/tasks/ and injects active feature context
 
 set -euo pipefail
 
@@ -66,11 +66,11 @@ escape_for_json() {
 # Escape the skill guidance once
 guidance_escaped=$(escape_for_json "$skill_guidance")
 
-# Check if .supercrew/features/ exists in the current working directory
-features_dir=".supercrew/features"
+# Check if .supercrew/tasks/ exists in the current working directory
+features_dir=".supercrew/tasks"
 if [ ! -d "$features_dir" ]; then
-    # No .supercrew/features/ found — inject skill context with minimal project info
-    context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n\nThis project does not have a .supercrew/features/ directory yet. If the user wants to start tracking features, suggest using /supercrew:create.\n</EXTREMELY_IMPORTANT>"
+    # No .supercrew/tasks/ found — inject skill context with minimal project info
+    context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n\nThis project does not have a .supercrew/tasks/ directory yet. If the user wants to start tracking features, suggest using /supercrew:create.\n</EXTREMELY_IMPORTANT>"
     cat <<EOF
 {
   "additional_context": "${context}",
@@ -83,7 +83,7 @@ EOF
     exit 0
 fi
 
-# --- .supercrew/features/ exists — build feature context ---
+# --- .supercrew/tasks/ exists — build feature context ---
 
 # Get current branch for active feature matching
 current_branch=$(git branch --show-current 2>/dev/null || echo "")
@@ -136,10 +136,10 @@ for feature_dir in "$features_dir"/*/; do
         if [[ "$current_branch" == user/*/* ]]; then
             username_part="${current_branch#user/}"
             username_part="${username_part%%/*}"
-            remote_meta=$(git show "origin/user/${username_part}/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || true)
+            remote_meta=$(git show "origin/user/${username_part}/${fid}:.supercrew/tasks/${fid}/meta.yaml" 2>/dev/null || true)
         fi
         if [ -z "$remote_meta" ]; then
-            remote_meta=$(git show "origin/feature/${fid}:.supercrew/features/${fid}/meta.yaml" 2>/dev/null || true)
+            remote_meta=$(git show "origin/feature/${fid}:.supercrew/tasks/${fid}/meta.yaml" 2>/dev/null || true)
         fi
         meta_content="${remote_meta:-$(cat "$meta_file")}"
 
@@ -232,7 +232,7 @@ if [ -z "$active_feature_id" ] && [ "$feature_count" -gt 0 ]; then
 fi
 
 # Compose full context
-context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n</EXTREMELY_IMPORTANT>\n\n<supercrew-context>\nThis project has ${feature_count} feature(s) tracked in .supercrew/features/.\n\n## All Features\n${features_summary}${active_detail}${no_match_prompt}\n</supercrew-context>"
+context="<EXTREMELY_IMPORTANT>\nYou have supercrew installed.\n\n${guidance_escaped}\n</EXTREMELY_IMPORTANT>\n\n<supercrew-context>\nThis project has ${feature_count} feature(s) tracked in .supercrew/tasks/.\n\n## All Features\n${features_summary}${active_detail}${no_match_prompt}\n</supercrew-context>"
 
 cat <<EOF
 {
