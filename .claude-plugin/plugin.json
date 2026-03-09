@@ -1,7 +1,7 @@
 {
   "name": "supercrew",
   "description": "AI-driven feature lifecycle management. Creates and manages .supercrew/tasks/ directories with meta.yaml, prd.md, and dev-* files for structured feature development.",
-  "version": "1.0.0",
+  "version": "0.4.1",
   "author": {
     "name": "steinsz"
   },
