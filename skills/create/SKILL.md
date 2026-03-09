@@ -34,7 +34,7 @@ Do NOT proceed to Step 2 until all questions are answered.
 
 ### Step 2: (Optional) Create a Feature Branch
 
-If you are currently on the 'main' branch, it is recommended to create a new branch for your feature work:
+If you are currently on the 'main' or 'dev' branch, it is recommended to create a new branch for your feature work:
 
 Example: `git checkout -b my-feature-branch`
 

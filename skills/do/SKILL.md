@@ -48,7 +48,7 @@ If ambiguous, ask the user to confirm.
 
 
 1. **(Optional) Create or switch to a feature branch**:
-   - If you are currently on the 'main' branch, it is recommended to create a new branch for your feature work:
+   - If you are currently on the 'main' or 'dev' branch, it is recommended to create a new branch for your feature work:
    - Example: `git checkout -b my-feature-branch`
    - If you are already on a feature branch, you can continue working there.
    - If branch exists, switch to it; otherwise create it
